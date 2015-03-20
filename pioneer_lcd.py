@@ -7,14 +7,15 @@ from datetime import datetime
 
 import urllib2
 import json
-import pprint
 
-temp_f = ''
+lcd = Adafruit_CharLCD()
+lcd.begin(16, 2)
+
+cmd = "ip addr show wlan0 | grep inet | awk '{print $2}' | cut -d/ -f1"
+
 humidity = ''
- 
-API_KEY='ENTER YOUR KEY HERE' # Obtain a free API key from weatherunderground.com
-
-pp = pprint.PrettyPrinter(indent=4)
+temp_f = ''
+API_KEY='' # Obtain a free API key from weatherunderground.com
 
 def get_weather():
 	global data
@@ -29,25 +30,22 @@ def get_weather():
 	f.close()
 	return
 
-
-lcd = Adafruit_CharLCD()
-
-cmd = "ip addr show wlan0 | grep inet | awk '{print $2}' | cut -d/ -f1"
-
-lcd.begin(16, 1)
-
-
 def run_cmd(cmd):
 	p = Popen(cmd, shell=True, stdout=PIPE)
 	output = p.communicate()[0]
 	return output
 
 while 1:
-	lcd.home();
-	get_weather()
-	ipaddr = run_cmd(cmd)
-	lcd.message(datetime.now().strftime('%b %d  %I:%M %p\n'))
-#	lcd.message("IP: %s" % ipaddr.strip())
-	temp = str(temp_f) + unichr(223) + "F"
-	lcd.message("%s Hum: %s" % (temp, humidity))
-	sleep(15)
+#	lcd.home()
+	if datetime.now().second % 2:
+		lcd.setCursor(0,0)
+		lcd.message(datetime.now().strftime('%b %d %I %M %p\n'))
+	else:
+		lcd.setCursor(0,0)
+		lcd.message(datetime.now().strftime('%b %d %I:%M %p\n'))
+	if (datetime.now().minute % 5 == 0) and (datetime.now().second == 0):
+		lcd.setCursor(0,1)
+		get_weather()
+		temp = str(temp_f) + unichr(223) + "F"
+		lcd.message("%s Hum: %s" % (temp, humidity))
+	sleep(1)
